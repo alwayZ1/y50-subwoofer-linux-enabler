@@ -11,11 +11,16 @@ from subprocess import call
 ############
 # Settings #
 ############
+# For when you don't have headphones in and you want custom volume balance
 speakerBalance = 0
+# For when YOU DO have headphones in and you want custom volume balance
+# (broken debalanced headphones and whatnot)
 headphonesBalance = 0
-subwooferBalance = -25
-extraVolume = -11
-pulseaudio_detect_intervals = 5 # no of seconds between pulseaudio detects
+# This helps the subwoofer get the correct left/right stereo in so it sounds like
+subwooferBalance = -25		# Default: -25
+# This is extra volume for the subwoofer, independent of what stereo balance it gets as input
+extraVolume = 11 		# Default: -11. New default: 11; 
+pulseaudio_detect_intervals = 5 # Default: 5. No. of seconds between pulseaudio detects.
 
 # These are needed so the detection of volume change / headphones plug in or out not be done
 # for all of the enabled audio devices. Change to the alternatives if subwoofer doesn't enable
@@ -158,6 +163,7 @@ def set_headphones():
 
 def headphones_in_query():
   global headphones_in
+
   amixer = subprocess.Popen(["amixer", "-c", str(devId), "cget", "numid=22"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
   i = 0  
@@ -225,13 +231,13 @@ def on_exit():
   if pactl is not None:
     pactl.terminate()
   disable_subwoofer()
-  sys.exit(0)
 
 ########
 # Main #
 ########
 if __name__ == "__main__":
-  if "exit" in sys.argv:
+  if ("exit" in sys.argv) or (("pre" in sys.argv) and 
+    (("suspend" in sys.argv) or ("hibernate" in sys.argv) or ("hybrid-sleep" in sys.argv))):
     on_exit()
     sys.exit(0)
   atexit.register(on_exit)
@@ -247,6 +253,8 @@ if __name__ == "__main__":
         time.sleep(pulseaudio_detect_intervals)
     if pgrep is not None:
       pgrep.terminate()
+    
+
 
   headphones_in_query()
   if headphones_in == False:
